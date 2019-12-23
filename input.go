@@ -2,6 +2,7 @@ package mygoadb
 
 import (
 	"fmt"
+	"math/rand"
 	"time"
 )
 
@@ -22,6 +23,7 @@ type InputI interface {
 	Query(arg ...string) ([]byte, error)
 	Click(x, y int) (err error)
 	Swipe(x, y, x1, y1, dtime int) (err error)
+	SwipeRandom(x, y, x1, y1, dtime, r int) (err error)
 	Text(str string) (err error)
 	KeyEvent(key string, longpress bool) (err error)
 
@@ -68,7 +70,19 @@ func (i *CmdInput) Swipe(x, y, x1, y1, dtime int) error {
 	}
 	dur := time.Duration(dtime) * time.Millisecond
 
-	return i.query2("swipe", fmt.Sprintf("%d %d %d %d %s", x, y, x1, y1, dur.String()))
+	return i.query2("swipe", fmt.Sprintf("%d %d %d %d %d", x, y, x1, y1, dur.Milliseconds()))
+}
+
+// SwipeRandom input SwipeRandom
+func (i *CmdInput) SwipeRandom(x, y, x1, y1, dtime, r int) error {
+
+	return i.Swipe(i.random(x, r), i.random(y, r), i.random(x1, r), i.random(y1, r), dtime)
+	//return i.query2("swipe", fmt.Sprintf("%d %d %d %d %d", i.random(x, r), i.random(y, r), i.random(x1, r), i.random(y1, r), dur.Milliseconds()))
+}
+
+func (i *CmdInput) random(min, max int) int {
+	rand.Seed(time.Now().UnixNano())
+	return rand.Intn(max-min) + min
 }
 
 // Text input text

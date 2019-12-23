@@ -21,6 +21,7 @@ func (s *CmdExecOut) Query(name string, arg ...string) ([]byte, error) {
 	return s.a.Query("exec-out", args...)
 }
 
+// Screencap exec-out Screencap
 func (s *CmdExecOut) Screencap(imgpath string) error {
 	b, err := s.ScreencapByte()
 	if err != nil {
@@ -30,7 +31,7 @@ func (s *CmdExecOut) Screencap(imgpath string) error {
 	return err
 }
 
-// ScreencapByte shell screencap to byte
+// ScreencapByte exec-out screencap to byte
 func (s *CmdExecOut) ScreencapByte() ([]byte, error) {
 	return s.Query("screencap", "-p")
 }
