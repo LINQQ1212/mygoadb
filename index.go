@@ -11,7 +11,6 @@ import (
 // ADB  mygoadb
 type ADB struct {
 	sync.RWMutex
-	cmd     *exec.Cmd
 	Path    string
 	Args    []string
 	debug   bool
@@ -26,12 +25,12 @@ func Command(name string) (adb *ADB) {
 	adb = &ADB{
 		debug:  false,
 		Path:   name,
-		cmd:    exec.Command(name),
 		TmpDir: "/data/local/tmp",
+		Args:   []string{},
 	}
 	adb.Shell = NewCmdShell(adb)
 	adb.ExecOut = NewCmdExecOut(adb)
-	adb.Args = append([]string{}, adb.cmd.Args...)
+
 	return
 }
 
@@ -48,16 +47,15 @@ func (a *ADB) Debug(f bool) {
 // Use use device with given serial
 func (a *ADB) Use(SERIAL string) *ADB {
 	adb := &ADB{
-		Path: a.Path,
-		cmd:  a.cmd,
+		debug:  a.debug,
+		TmpDir: a.TmpDir,
+		Path:   a.Path,
+		Args:   append([]string{}, "-s", SERIAL),
 	}
-	adb.Args = []string{a.Path, "-s", SERIAL}
-	return adb
-}
+	adb.Shell = NewCmdShell(adb)
+	adb.ExecOut = NewCmdExecOut(adb)
 
-// Cmd 获取cmd
-func (a *ADB) Cmd() *exec.Cmd {
-	return a.cmd
+	return adb
 }
 
 // Devices 查询 Devices
@@ -82,7 +80,7 @@ func (a *ADB) Devices() []string {
 }
 
 // Query 执行
-func (a *ADB) Query(parts string, arg ...string) ([]byte, error) {
+func (a *ADB) Query(parts string, arg ...string) (b []byte, err error) {
 	a.Lock()
 	defer a.Unlock()
 	args := append([]string{}, a.Args...)
@@ -90,13 +88,12 @@ func (a *ADB) Query(parts string, arg ...string) ([]byte, error) {
 	if len(arg) > 0 {
 		args = append(args, arg...)
 	}
-	a.cmd.Args = args
+
 	if a.debug {
-		log.Println("mygoadb debug:", strings.Join(a.cmd.Args, " "))
+		log.Println("mygoadb debug:", strings.Join(args, " "))
 		return []byte(""), nil
 	}
-	//a.cmd.Run()
-	return a.cmd.Output()
+	return exec.Command(a.Path, args...).Output()
 }
 
 //UnInstallApp UnInstall App

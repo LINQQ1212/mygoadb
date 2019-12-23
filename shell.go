@@ -1,5 +1,10 @@
 package mygoadb
 
+import (
+	"bytes"
+	"io/ioutil"
+)
+
 // NewCmdShell new CmdShell
 func NewCmdShell(a *ADB) *CmdShell {
 	s := &CmdShell{
@@ -19,18 +24,26 @@ type CmdShell struct {
 
 // Query 执行 shell cmd
 func (s *CmdShell) Query(name string, arg ...string) ([]byte, error) {
-	return s.a.Query("shell", arg...)
+	args := append([]string{name}, arg...)
+	return s.a.Query("shell", args...)
 }
 
 // Screencap shell screencap
 func (s *CmdShell) Screencap(imgpath string) error {
-	_, err := s.Query("screencap", "-p", ">", imgpath)
+	b, err := s.ScreencapByte()
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(imgpath, b, 0644)
+	//_, err = s.Query("'screencap -p > " + imgpath + "'")
 	return err
 }
 
 // ScreencapByte shell screencap to byte
-func (s *CmdShell) ScreencapByte() ([]byte, error) {
-	return s.Query("screencap", "-p")
+func (s *CmdShell) ScreencapByte() (b []byte, err error) {
+	b, err = s.Query("screencap", "-p")
+	b = bytes.ReplaceAll(b, []byte("\r\r\n"), []byte("\n"))
+	return
 }
 
 // StartApp start app

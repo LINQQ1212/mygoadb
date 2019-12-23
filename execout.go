@@ -15,7 +15,8 @@ type CmdExecOut struct {
 
 // Query 执行 shell cmd
 func (s *CmdExecOut) Query(name string, arg ...string) ([]byte, error) {
-	return s.a.Query("exec-out", arg...)
+	args := append([]string{name}, arg...)
+	return s.a.Query("exec-out", args...)
 }
 
 // Screencap shell screencap
