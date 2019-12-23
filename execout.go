@@ -1,5 +1,7 @@
 package mygoadb
 
+import "io/ioutil"
+
 // NewCmdExecOut  exec-out
 func NewCmdExecOut(a *ADB) *CmdExecOut {
 	s := &CmdExecOut{
@@ -19,9 +21,12 @@ func (s *CmdExecOut) Query(name string, arg ...string) ([]byte, error) {
 	return s.a.Query("exec-out", args...)
 }
 
-// Screencap shell screencap
 func (s *CmdExecOut) Screencap(imgpath string) error {
-	_, err := s.Query("screencap", "-p", ">", imgpath)
+	b, err := s.ScreencapByte()
+	if err != nil {
+		return err
+	}
+	err = ioutil.WriteFile(imgpath, b, 0644)
 	return err
 }
 
