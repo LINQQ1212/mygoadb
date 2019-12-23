@@ -4,31 +4,40 @@ import (
 	"bytes"
 	"log"
 	"os/exec"
+	"strings"
 	"sync"
 )
 
-const (
-	KEY_UP   = "up"
-	KEY_MV   = "move"
-	KEY_DOWN = "down"
-)
-
+// ADB  mygoadb
 type ADB struct {
 	sync.RWMutex
-	cmd   *exec.Cmd
-	Path  string
-	Args  []string
-	debug bool
+	cmd     *exec.Cmd
+	Path    string
+	Args    []string
+	debug   bool
+	Shell   *CmdShell
+	ExecOut *CmdExecOut
+	// TmpDir android tmp dir
+	TmpDir string
 }
 
+// Command 调用 mygoadb
 func Command(name string) (adb *ADB) {
 	adb = &ADB{
-		debug: false,
-		Path:  name,
-		cmd:   exec.Command(name),
+		debug:  false,
+		Path:   name,
+		cmd:    exec.Command(name),
+		TmpDir: "/data/local/tmp",
 	}
+	adb.Shell = NewCmdShell(adb)
+	adb.ExecOut = NewCmdExecOut(adb)
 	adb.Args = append([]string{}, adb.cmd.Args...)
 	return
+}
+
+// SetTmpDir set android tmp dir
+func (a *ADB) SetTmpDir(dir string) {
+	a.TmpDir = dir
 }
 
 // Debug 调试切换
@@ -51,7 +60,7 @@ func (a *ADB) Cmd() *exec.Cmd {
 	return a.cmd
 }
 
-// Devices
+// Devices 查询 Devices
 func (a *ADB) Devices() []string {
 	b, err := a.Query("devices")
 	if a.checkErr(err) {
@@ -72,25 +81,35 @@ func (a *ADB) Devices() []string {
 	return arr
 }
 
-// Shell shell
-func (a *ADB) ShellQuety(arg ...string) ([]byte, error) {
-	return a.Query("shell", arg...)
-}
-
 // Query 执行
-func (a *ADB) Query(name string, arg ...string) ([]byte, error) {
+func (a *ADB) Query(parts string, arg ...string) ([]byte, error) {
+	a.Lock()
+	defer a.Unlock()
 	args := append([]string{}, a.Args...)
-	args = append(args, name)
+	args = append(args, parts)
 	if len(arg) > 0 {
 		args = append(args, arg...)
 	}
 	a.cmd.Args = args
 	if a.debug {
-		log.Println("mygoadb debug:", a.cmd.String())
+		log.Println("mygoadb debug:", strings.Join(a.cmd.Args, " "))
 		return []byte(""), nil
 	}
 	//a.cmd.Run()
 	return a.cmd.Output()
+}
+
+//UnInstallApp UnInstall App
+func (a *ADB) UnInstallApp(packages string) ([]byte, error) {
+	return a.Query("uninstall", packages)
+}
+
+//InstallApp Install App  If the part up is true, use -r
+func (a *ADB) InstallApp(appPath string, up bool) ([]byte, error) {
+	if up {
+		return a.Query("install", "-r", appPath)
+	}
+	return a.Query("install", appPath)
 }
 
 func (a *ADB) checkErr(err error) bool {
