@@ -1,6 +1,7 @@
 # mygoadb
+```
 go get -v github.com/LINQQ1212/mygoadb
-
+```
 go 调用 adb
 链式调用，代码量不多
 
