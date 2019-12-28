@@ -80,9 +80,14 @@ func (i *CmdInput) SwipeRandom(x, y, x1, y1, dtime, r int) error {
 	//return i.query2("swipe", fmt.Sprintf("%d %d %d %d %d", i.random(x, r), i.random(y, r), i.random(x1, r), i.random(y1, r), dur.Milliseconds()))
 }
 
-func (i *CmdInput) random(min, max int) int {
+func (i *CmdInput) random(max, min int) int {
 	rand.Seed(time.Now().UnixNano())
-	return rand.Intn(max-min) + min
+	o := max - min
+	if o > 0 {
+		time.Sleep(100 * time.Microsecond)
+		return rand.Intn(o) + min
+	}
+	return max + min
 }
 
 // Text input text
