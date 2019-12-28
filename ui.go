@@ -2,6 +2,7 @@ package mygoadb
 
 import (
 	"bytes"
+	"io/ioutil"
 
 	"github.com/PuerkitoBio/goquery"
 )
@@ -9,7 +10,7 @@ import (
 // UII shell ui interface
 type UII interface {
 	GetUIString() ([]byte, error)
-	SaveTo(dirname string) ([]byte, error)
+	SaveTo(filePath string) error
 	GetUIToDoc() (*goquery.Document, error)
 }
 
@@ -44,9 +45,13 @@ func (i *CmdUI) GetUIString() ([]byte, error) {
 }
 
 // SaveTo pull file to you computer dir
-func (i *CmdUI) SaveTo(dirname string) ([]byte, error) {
-	i.dumpui()
-	return i.s.Query("pull", i.tmpPath, dirname)
+func (i *CmdUI) SaveTo(filePath string) (err error) {
+	var b []byte
+	b, err = i.GetUIString()
+	if err != nil {
+		return
+	}
+	return ioutil.WriteFile(filePath, b, 0644)
 }
 
 // GetUIToDoc get ui to goquery.Document
