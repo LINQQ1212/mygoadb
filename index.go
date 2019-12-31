@@ -2,6 +2,7 @@ package mygoadb
 
 import (
 	"bytes"
+	"errors"
 	"log"
 	"os/exec"
 	"strings"
@@ -90,8 +91,9 @@ func (a *ADB) Query(parts string, arg ...string) (b []byte, err error) {
 	}
 
 	if a.debug {
-		log.Println("mygoadb debug:", strings.Join(args, " "))
-		return []byte(""), nil
+		cmdstr := strings.Join(args, " ")
+		log.Println("mygoadb debug:", cmdstr)
+		return []byte(cmdstr), errors.New(cmdstr)
 	}
 	return exec.Command(a.Path, args...).Output()
 }
