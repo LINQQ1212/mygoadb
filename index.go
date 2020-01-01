@@ -7,6 +7,7 @@ import (
 	"os/exec"
 	"strings"
 	"sync"
+	"syscall"
 )
 
 // ADB  mygoadb
@@ -100,7 +101,9 @@ func (a *ADB) Query(parts string, arg ...string) (b []byte, err error) {
 		log.Println("mygoadb debug:", cmdstr)
 		return []byte(cmdstr), errors.New(cmdstr)
 	}
-	return exec.Command(a.Path, args...).Output()
+	cmd := exec.Command(a.Path, args...)
+	cmd.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	return cmd.Output()
 }
 
 //UnInstallApp UnInstall App
