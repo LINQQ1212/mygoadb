@@ -23,11 +23,6 @@ func NewUI(s *CmdShell) *CmdUI {
 	return u
 }
 
-/*
-adb -s Y15MFBP8236XF shell uiautomator dump /sdcard/ui.xml
-adb -s Y15MFBP8236XF pull /sdcard/ui.xml C:/Users/Administrator/Desktop
-adb -s Y15MFBP8236XF shell cat /sdcard/ui.xml
-*/
 // CmdUI shell
 type CmdUI struct {
 	s       *CmdShell
