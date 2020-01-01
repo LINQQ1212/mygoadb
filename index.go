@@ -45,6 +45,11 @@ func (a *ADB) Debug(f bool) {
 	a.debug = f
 }
 
+// IsDebug  is Debug
+func (a *ADB) IsDebug() bool {
+	return a.debug
+}
+
 // Use use device with given serial
 func (a *ADB) Use(SERIAL string) *ADB {
 	adb := &ADB{
