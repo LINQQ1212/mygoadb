@@ -82,10 +82,13 @@ func (i *CmdInput) SwipeRandom(x, y, x1, y1, dtime, r int) error {
 
 func (i *CmdInput) random(max, min int) int {
 	rand.Seed(time.Now().UnixNano())
+	time.Sleep(50 * time.Microsecond)
 	o := max - min
 	if o > 0 {
-		time.Sleep(100 * time.Microsecond)
-		return rand.Intn(o) + min
+		i := min * 2
+		return (max - i) + rand.Intn(i)
+	} else {
+		return rand.Intn(min) + max
 	}
 	return max + min
 }
