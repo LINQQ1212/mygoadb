@@ -3,6 +3,8 @@ package mygoadb
 import (
 	"bytes"
 	"errors"
+	"io"
+	"io/ioutil"
 	"log"
 	"os/exec"
 	"strings"
@@ -86,8 +88,58 @@ func (a *ADB) Devices() []string {
 	return arr
 }
 
-// Query 执行
 func (a *ADB) Query(parts string, arg ...string) (b []byte, err error) {
+	a.Lock()
+	defer a.Unlock()
+	args := append([]string{}, a.Args...)
+	args = append(args, parts)
+	if len(arg) > 0 {
+		args = append(args, arg...)
+	}
+
+	if a.debug {
+		cmdstr := strings.Join(args, " ")
+		log.Println("mygoadb debug:", cmdstr)
+		return []byte(cmdstr), errors.New(cmdstr)
+	}
+	adbExec := exec.Command(a.Path, args...)
+	adbExec.SysProcAttr = &syscall.SysProcAttr{HideWindow: true}
+	in, _ := adbExec.StdinPipe()
+	errorOut, _ := adbExec.StderrPipe()
+	out, _ := adbExec.StdoutPipe()
+	defer closeIO(in)
+	defer closeIO(errorOut)
+	defer closeIO(out)
+
+	if err := adbExec.Start(); err != nil {
+		return []byte(""), errors.New("start adb process error")
+	}
+
+	outData, _ := ioutil.ReadAll(out)
+	errorData, _ := ioutil.ReadAll(errorOut)
+
+	var adbError error = nil
+
+	if err := adbExec.Wait(); err != nil {
+		if _, ok := err.(*exec.ExitError); ok {
+			adbError = errors.New("adb return error")
+			outData = errorData
+		} else {
+			return []byte(""), errors.New("start adb process error")
+		}
+	}
+	return outData, adbError
+}
+
+// close a stream
+func closeIO(c io.Closer) {
+	if c != nil {
+		c.Close()
+	}
+}
+
+// Query 执行
+func (a *ADB) Query1(parts string, arg ...string) (b []byte, err error) {
 	a.Lock()
 	defer a.Unlock()
 	args := append([]string{}, a.Args...)
